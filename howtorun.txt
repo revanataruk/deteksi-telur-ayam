@@ -1,3 +1,8 @@
+install
+git clone https://github.com/revanataruk/deteksi-telur-ayam.git
 pip install -r requirements.txt
+
+run
 cd backend
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
+open user/developer
