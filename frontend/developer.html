@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EggGuard — Developer Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0c0e18;
+    --surface:   #13152a;
+    --border:    #1e2240;
+    --blue:      #5b8dff;
+    --blue-dim:  #0d1a3d;
+    --green:     #3ddc84;
+    --green-dim: #0d2d1c;
+    --red:       #ff5252;
+    --amber:     #ffc44d;
+    --text:      #dde3ff;
+    --muted:     #5a6490;
+    --font:      'Syne', sans-serif;
+    --mono:      'JetBrains Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--blue);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 16px;
+  }
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--muted); text-decoration: none;
+    font-size: 0.82rem; font-weight: 600;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  .back-btn:hover { color: var(--blue); border-color: var(--blue); }
+
+  /* Layout */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* Page title */
+  .page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 40px;
+  }
+
+  /* Progress bar */
+  .progress-track {
+    display: flex;
+    gap: 0;
+    margin-bottom: 48px;
+    position: relative;
+  }
+  .progress-track::before {
+    content: '';
+    position: absolute;
+    top: 16px; left: 32px; right: 32px;
+    height: 2px;
+    background: var(--border);
+    z-index: 0;
+  }
+  .step-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+  }
+  .step-circle {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    display: grid; place-items: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted);
+    transition: all 0.3s;
+  }
+  .step-item.done .step-circle {
+    border-color: var(--green);
+    background: var(--green-dim);
+    color: var(--green);
+  }
+  .step-item.active .step-circle {
+    border-color: var(--blue);
+    background: var(--blue-dim);
+    color: var(--blue);
+    box-shadow: 0 0 12px rgba(91,141,255,0.3);
+  }
+  .step-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-align: center;
+  }
+  .step-item.active .step-label { color: var(--blue); }
+  .step-item.done .step-label { color: var(--green); }
+
+  /* Sections */
+  .section {
+    margin-bottom: 32px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-num {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--blue-dim);
+    border: 1px solid var(--blue);
+    color: var(--blue);
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .section-body {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  /* Info cards */
+  .info-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .info-card-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--amber);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .info-card p, .info-card li {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .info-card ul { padding-left: 16px; }
+  .info-card li { margin-bottom: 4px; }
+
+  /* Scenario grid */
+  .scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .scenario-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    transition: border-color 0.2s;
+  }
+  .scenario-card:hover { border-color: var(--blue); }
+  .scenario-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+  .scenario-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .scenario-visual {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+  }
+  .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .badge-red   { background: rgba(255,82,82,0.1); color: var(--red); border: 1px solid var(--red); }
+
+  /* Code block */
+  pre {
+    background: #080a14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: #a0b4ff;
+    line-height: 1.7;
+    margin-top: 12px;
+  }
+  pre .comment { color: var(--muted); }
+  pre .cmd     { color: var(--green); }
+  pre .flag    { color: var(--amber); }
+
+  /* Dataset stats */
+  .dataset-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .ds-stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .ds-stat .val {
+    font-family: var(--mono);
+    font-size: 1.3rem;
+    font-weight: 600;
+    display: block;
+    color: var(--blue);
+  }
+  .ds-stat .lbl {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+    display: block;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+    margin-bottom: 16px;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--blue);
+    background: var(--blue-dim);
+  }
+  .upload-zone .icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .upload-zone p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+  .upload-zone strong { color: var(--blue); }
+
+  /* File list */
+  .file-list {
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+    margin-bottom: 12px;
+  }
+  .file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+  }
+  .file-item:hover { background: var(--surface); }
+  .file-name { color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-size { color: var(--muted); margin: 0 10px; }
+  .file-status { font-size: 0.8rem; }
+
+  /* Buttons */
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-blue  { background: var(--blue); color: #050810; }
+  .btn-blue:hover { background: #7aaeff; }
+  .btn-green { background: var(--green); color: #050f09; }
+  .btn-green:hover { background: #5de89d; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+  .btn-full { width: 100%; margin-top: 8px; }
+
+  /* Alert */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .alert.show { display: block; }
+  .alert-blue   { background: var(--blue-dim); border: 1px solid var(--blue); color: #9bb8ff; }
+  .alert-green  { background: var(--green-dim); border: 1px solid var(--green); color: #7de8a5; }
+  .alert-amber  { background: rgba(255,196,77,0.1); border: 1px solid var(--amber); color: var(--amber); }
+
+  /* Training progress */
+  .train-status {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    height: 120px;
+    overflow-y: auto;
+    margin-top: 12px;
+    line-height: 1.8;
+  }
+  .train-status .ok { color: var(--green); }
+  .train-status .warn { color: var(--amber); }
+  .train-status .err { color: var(--red); }
+
+  /* Separator */
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* Annotation guide visual */
+  .anno-visual {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .anno-grid {
+    display: inline-grid;
+    grid-template-columns: repeat(5, 44px);
+    grid-template-rows: repeat(2, 44px);
+    gap: 6px;
+  }
+  .egg-slot {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    position: relative;
+  }
+  .egg-slot.good   { border-color: var(--green); background: var(--green-dim); }
+  .egg-slot.cracked { border-color: var(--red); background: rgba(255,82,82,0.12);
+    box-shadow: 0 0 10px rgba(255,82,82,0.3); }
+  .anno-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🔧</div>
+    Developer Panel
+  </div>
+  <a href="user.html" class="back-btn">← Ke Halaman User</a>
+</header>
+
+<div class="container">
+
+  <div class="page-title">Panduan Training Model</div>
+  <div class="page-sub">Ikuti langkah berikut untuk melatih model deteksi telur retak dari nol.</div>
+
+  <!-- Progress Steps -->
+  <div class="progress-track">
+    <div class="step-item active">
+      <div class="step-circle">1</div>
+      <div class="step-label">Setup</div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle">2</div>
+      <div class="step-label">Foto Dataset</div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle">3</div>
+      <div class="step-label">Anotasi</div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle">4</div>
+      <div class="step-label">Training</div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle">5</div>
+      <div class="step-label">Deploy</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: INSTALL -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">Instalasi & Setup Awal</div>
+    </div>
+    <div class="section-body">
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;line-height:1.7">
+        Pastikan Python 3.9+ sudah terinstall. Buka terminal/command prompt di folder project ini.
+      </p>
+      <pre><span class="comment"># 1. Install semua dependency</span>
+<span class="cmd">pip install</span> <span class="flag">-r</span> requirements.txt
+
+<span class="comment"># 2. Jalankan backend server</span>
+<span class="cmd">cd</span> backend
+<span class="cmd">uvicorn</span> main:app <span class="flag">--reload --host</span> 0.0.0.0 <span class="flag">--port</span> 8000
+
+<span class="comment"># 3. Buka di browser (tab berbeda)</span>
+<span class="comment"># User  : file:///path/ke/frontend/user.html</span>
+<span class="comment"># Dev   : file:///path/ke/frontend/developer.html</span></pre>
+
+      <div class="alert alert-blue show" style="margin-top:16px">
+        💡 <strong>HP sebagai Kamera:</strong> Install app <strong>IP Webcam</strong> (Android, gratis) di HP.
+        Pastikan HP dan laptop di WiFi yang sama. Buka app → Start Server → salin URL yang muncul ke halaman User.
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: FOTO DATASET -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">Pengambilan Foto Dataset</div>
+    </div>
+    <div class="section-body">
+
+      <div class="info-card">
+        <div class="info-card-title">🎯 Target Foto Minimum</div>
+        <ul>
+          <li><strong>100–200 foto</strong> untuk akurasi dasar (~80%)</li>
+          <li><strong>300–500 foto</strong> untuk akurasi produksi (~90%+)</li>
+          <li>Rasio: <strong>80% training, 20% validasi</strong> (sudah otomatis di split)</li>
+          <li>Foto dari <strong>sudut top-down</strong>, jarak kamera tetap (pakai penyangga)</li>
+        </ul>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">📸 Tips Pengambilan Foto Optimal</div>
+        <ul>
+          <li>Nyalakan LED panel di bawah mika — retak akan terlihat lebih jelas</li>
+          <li>Variasikan tingkat kecerahan LED (75%, 100%) agar model robust</li>
+          <li>Ambil foto dari HP dengan resolusi cukup (min 1280×720)</li>
+          <li>Pastikan seluruh mika masuk frame, sedikit ruang di tepi</li>
+          <li>Variasikan orientasi mika sedikit (rotate ±10°) untuk robustness</li>
+        </ul>
+      </div>
+
+      <p style="font-size:0.87rem;font-weight:700;margin:16px 0 10px;">Skenario Foto yang Harus Dikumpulkan:</p>
+      <div class="scenario-grid">
+        <div class="scenario-card">
+          <div class="scenario-visual">🥚🥚🥚🥚🥚</div>
+          <div class="scenario-label">Semua Bagus</div>
+          <div class="scenario-desc">10 telur, tidak ada yang retak. Paling banyak difoto (~40%).</div>
+          <span class="badge badge-green">ACCEPTED</span>
+        </div>
+        <div class="scenario-card">
+          <div class="scenario-visual">🥚🥚🥚🥚💔</div>
+          <div class="scenario-label">1 Retak — Pojok</div>
+          <div class="scenario-desc">1 telur retak di pojok mika (kiri atas, kanan bawah, dll).</div>
+          <span class="badge badge-red">REJECTED</span>
+        </div>
+        <div class="scenario-card">
+          <div class="scenario-visual">💔🥚🥚🥚💔</div>
+          <div class="scenario-label">2 Retak — Acak</div>
+          <div class="scenario-desc">2 telur retak di posisi berbeda, termasuk bersebelahan.</div>
+          <span class="badge badge-red">REJECTED</span>
+        </div>
+        <div class="scenario-card">
+          <div class="scenario-visual">💔💔🥚💔🥚</div>
+          <div class="scenario-label">3+ Retak</div>
+          <div class="scenario-desc">3 atau lebih telur retak. Berbagai kombinasi posisi.</div>
+          <span class="badge badge-red">REJECTED</span>
+        </div>
+        <div class="scenario-card">
+          <div class="scenario-visual">💔🥚💔🥚💔</div>
+          <div class="scenario-label">Retak Berselang</div>
+          <div class="scenario-desc">Pola berselang — model harus bisa bedakan setiap telur.</div>
+          <span class="badge badge-red">REJECTED</span>
+        </div>
+        <div class="scenario-card">
+          <div class="scenario-visual">🥚🥚💔💔💔</div>
+          <div class="scenario-label">Retak Beruntun</div>
+          <div class="scenario-desc">Beberapa telur retak bersebelahan (sering terjadi saat jatuh).</div>
+          <span class="badge badge-red">REJECTED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: ANOTASI -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">Anotasi Dataset (Pelabelan)</div>
+    </div>
+    <div class="section-body">
+
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;line-height:1.7">
+        Anotasi adalah proses memberi kotak (bounding box) di setiap telur dan menandainya
+        <code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--green)">egg_good</code> atau
+        <code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--red)">egg_cracked</code>.
+        Gunakan <strong>LabelImg</strong> — tool gratis, export langsung ke format YOLO.
+      </p>
+
+      <!-- Visual example -->
+      <div class="anno-visual">
+        <div class="anno-grid">
+          <div class="egg-slot good">🥚</div>
+          <div class="egg-slot good">🥚</div>
+          <div class="egg-slot cracked">💔</div>
+          <div class="egg-slot good">🥚</div>
+          <div class="egg-slot good">🥚</div>
+          <div class="egg-slot good">🥚</div>
+          <div class="egg-slot good">🥚</div>
+          <div class="egg-slot good">🥚</div>
+          <div class="egg-slot good">🥚</div>
+          <div class="egg-slot cracked">💔</div>
+        </div>
+        <div class="anno-label">
+          Setiap telur diberi bounding box individual.<br>
+          🟢 = <code>egg_good</code> &nbsp;|&nbsp; 🔴 = <code>egg_cracked</code>
+        </div>
+      </div>
+
+      <pre style="margin-top:16px"><span class="comment"># Install LabelImg</span>
+<span class="cmd">pip install</span> labelImg
+
+<span class="comment"># Jalankan LabelImg</span>
+<span class="cmd">labelImg</span>
+
+<span class="comment"># Di LabelImg:
+# 1. Open Dir → pilih folder dataset/images/train
+# 2. Change Save Dir → pilih dataset/labels/train
+# 3. Ganti format ke YOLO (klik PascalVOC → pilih YOLO)
+# 4. Untuk setiap foto: gambar box di tiap telur
+#    → Class: egg_good atau egg_cracked
+# 5. Save (Ctrl+S) → otomatis buat file .txt</span></pre>
+
+      <div class="alert alert-amber show" style="margin-top:16px">
+        ⏱ <strong>Estimasi waktu anotasi:</strong> ~5-10 menit per foto (10 telur/foto).
+        Untuk 200 foto = ~20-30 jam. Bagi dengan anggota keluarga/karyawan untuk mempercepat.
+        Alternatif cepat: gunakan <strong>Roboflow</strong> (online, bisa auto-label).
+      </div>
+
+      <p style="font-size:0.87rem;font-weight:700;margin:16px 0 10px;">Struktur folder setelah anotasi:</p>
+      <pre>dataset/
+├── images/
+│   ├── train/   <span class="comment">← 80% foto (misal 160 foto)</span>
+│   └── val/     <span class="comment">← 20% foto (misal 40 foto)</span>
+└── labels/
+    ├── train/   <span class="comment">← file .txt untuk tiap foto di train</span>
+    └── val/     <span class="comment">← file .txt untuk tiap foto di val</span>
+
+<span class="comment"># Setiap .txt berisi baris: class_id cx cy w h (format YOLO)
+# Contoh: 0 0.45 0.32 0.12 0.18  ← egg_good
+#         1 0.78 0.65 0.11 0.17  ← egg_cracked</span></pre>
+
+      <!-- Upload section -->
+      <hr style="margin:20px 0">
+      <p style="font-size:0.87rem;font-weight:700;margin-bottom:12px;">📤 Upload Dataset ke Server</p>
+      <div class="dataset-stats">
+        <div class="ds-stat"><span class="val" id="dsTrainImg">0</span><span class="lbl">Train Img</span></div>
+        <div class="ds-stat"><span class="val" id="dsTrainLbl">0</span><span class="lbl">Train Label</span></div>
+        <div class="ds-stat"><span class="val" id="dsValImg">0</span><span class="lbl">Val Img</span></div>
+        <div class="ds-stat"><span class="val" id="dsValLbl">0</span><span class="lbl">Val Label</span></div>
+      </div>
+
+      <div class="alert alert-blue show">
+        📂 Upload via folder langsung lebih mudah. Salin foto ke <code>dataset/images/train</code>
+        dan label ke <code>dataset/labels/train</code> menggunakan File Explorer.
+        Tombol di bawah untuk verifikasi jumlah file.
+      </div>
+
+      <button class="btn btn-outline btn-full" onclick="checkDataset()">🔍 Cek Jumlah Dataset</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: TRAINING -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div class="section-title">Training Model</div>
+    </div>
+    <div class="section-body">
+
+      <div class="info-card">
+        <div class="info-card-title">⚙️ Konfigurasi Training (CPU Optimized)</div>
+        <ul>
+          <li>Model: <strong>YOLOv8n</strong> (nano) — tercepat di CPU, cocok untuk 1-3 detik per mika</li>
+          <li>Epoch: 100 (otomatis stop lebih awal jika sudah konvergen)</li>
+          <li>Estimasi waktu training CPU: <strong>30–90 menit</strong> untuk 200 foto</li>
+          <li>RAM minimum: 4GB (disarankan 8GB)</li>
+        </ul>
+      </div>
+
+      <pre><span class="comment"># Pastikan sudah di folder root project</span>
+<span class="comment"># Jalankan training:</span>
+<span class="cmd">python</span> train.py
+
+<span class="comment"># Training selesai → model otomatis disalin ke:
+# backend/models/best.pt
+# Restart backend untuk menggunakan model baru:</span>
+<span class="cmd">uvicorn</span> main:app <span class="flag">--reload --host</span> 0.0.0.0 <span class="flag">--port</span> 8000</pre>
+
+      <div class="alert alert-blue show" style="margin-top:12px">
+        📊 Setelah training, cek folder <code>runs/egg_detector/</code> untuk grafik akurasi (results.png).
+        Target: <strong>mAP50 &gt; 0.85</strong> berarti model sudah siap produksi.
+      </div>
+
+      <p style="font-size:0.87rem;font-weight:700;margin:16px 0 8px;">Cek status model saat ini:</p>
+      <div class="train-status" id="trainStatus">
+        <span class="warn">⏳ Klik tombol di bawah untuk cek status model...</span>
+      </div>
+      <button class="btn btn-blue btn-full" onclick="checkModelStatus()">🔄 Cek Status Model</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: DEPLOY / TUNING -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div class="section-title">Deploy & Fine-tuning</div>
+    </div>
+    <div class="section-body">
+
+      <div class="info-card">
+        <div class="info-card-title">✅ Checklist Sebelum Produksi</div>
+        <ul>
+          <li>Akurasi model (mAP50) &gt; 85% di validation set</li>
+          <li>Uji coba 10+ mika real — bandingkan hasil deteksi vs inspeksi manual</li>
+          <li>Sesuaikan confidence threshold di <code>detector.py</code> jika terlalu banyak false positive/negative</li>
+          <li>Pastikan pencahayaan LED konsisten setiap penggunaan</li>
+          <li>Jaga jarak kamera ke mika tetap sama (pakai penyangga fix)</li>
+        </ul>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">🔧 Parameter yang Bisa Disesuaikan</div>
+        <ul>
+          <li><code>conf_threshold</code> di detector.py — default 0.45. Naikkan jika terlalu sensitif, turunkan jika miss banyak retak</li>
+          <li><code>FPS_TARGET</code> di user.html — default 8fps. Kurangi jika CPU terlalu berat</li>
+          <li>CLAHE clipLimit di preprocessor — default 2.0. Naikkan jika LED sangat terang</li>
+        </ul>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">📈 Cara Meningkatkan Akurasi</div>
+        <ul>
+          <li>Tambah lebih banyak foto dataset (target 500+ foto)</li>
+          <li>Foto kondisi gagal deteksi lalu anotasi dan re-training</li>
+          <li>Variasikan kondisi pencahayaan dalam dataset</li>
+          <li>Upgrade ke YOLOv8s (small) jika CPU cukup kuat</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+
+async function checkModelStatus() {
+  const el = document.getElementById('trainStatus');
+  el.innerHTML = '<span>Menghubungi backend...</span>';
+
+  try {
+    const res = await fetch(API + '/');
+    const data = await res.json();
+    if (data.model_loaded) {
+      el.innerHTML = `<span class="ok">✅ Backend berjalan — Model CUSTOM telah dimuat!</span>\n<span class="ok">   Model siap digunakan untuk deteksi produksi.</span>`;
+    } else {
+      el.innerHTML = `<span class="warn">⚠️  Backend berjalan — Model custom BELUM ada.</span>\n<span>   Ikuti langkah 1-4 untuk melatih model.</span>\n<span>   Saat ini berjalan dalam mode DEMO.</span>`;
+    }
+  } catch (e) {
+    el.innerHTML = `<span class="err">❌ Tidak bisa terhubung ke backend.</span>\n<span class="err">   Pastikan server sudah dijalankan:</span>\n<span>   cd backend && uvicorn main:app --reload</span>`;
+  }
+}
+
+async function checkDataset() {
+  try {
+    const res = await fetch(API + '/stats');
+    // Simple ping — dataset check is file-system based
+    document.getElementById('dsTrainImg').textContent = '?';
+    document.getElementById('dsTrainLbl').textContent = '?';
+    document.getElementById('dsValImg').textContent = '?';
+    document.getElementById('dsValLbl').textContent = '?';
+    alert('Dataset ada di folder lokal. Gunakan File Explorer untuk mengecek jumlah file di dataset/images/ dan dataset/labels/');
+  } catch (e) {
+    alert('Backend tidak berjalan. Jalankan dulu dengan: uvicorn main:app --reload');
+  }
+}
+</script>
+</body>
+</html>
